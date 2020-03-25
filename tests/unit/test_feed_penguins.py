@@ -127,10 +127,8 @@ def test_list_penguins(list_penguins_event, mocker):
 
     assert ret["statusCode"] == 200
     assert "penguins" in ret["body"]
-    assert data["penguins"] == [
-        {'id': 1},
-        {'id': 2},
-        {'id': 3}
+    assert list(map(lambda penguin: penguin['name'], data["penguins"])) == [
+        "Emperor Penguin", "Chinstrap Penguin", "Rockhopper Penguin"
     ]
 
 

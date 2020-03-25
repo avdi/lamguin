@@ -42,11 +42,7 @@ def handle_list(event, context):
     return {
         "statusCode": 200,
         "body": json.dumps({
-            "penguins": [
-                {'id': 1},
-                {'id': 2},
-                {'id': 3}
-            ]
+            "penguins": list_penguins()
         }),
     }
 
