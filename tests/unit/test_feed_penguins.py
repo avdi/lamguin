@@ -1,6 +1,6 @@
 import json
 import urllib3
-import uuid
+from types import SimpleNamespace
 
 import pytest
 
@@ -69,7 +69,7 @@ def attempt_charge_event():
     """ Generates API GW AttemptCharge Event"""
 
     return {
-        "body": '{ }',
+        "body": '{ "nonce": "NONCE9876", "penguinId": 1 }',
         "resource": "/{proxy+}",
         "requestContext": {
             "resourceId": "123456",
@@ -122,7 +122,6 @@ def attempt_charge_event():
 
 
 def test_list_penguins(list_penguins_event, mocker):
-
     ret = app.lambda_handler(list_penguins_event, "")
     data = json.loads(ret["body"])
 
@@ -149,8 +148,8 @@ def test_attempt_charge_with_get(attempt_charge_event, mocker):
 def test_attempt_valid_charge(attempt_charge_event, mocker):
     """ attempt_charge """
 
-    fake_uuid = mocker.Mock(uuid.uuid1())
-    fake_uuid.urn = "UUID1234"
+    def fake_uuid():
+        return SimpleNamespace(urn="UUID1234")
     http_response = mocker.Mock(urllib3.response.HTTPResponse)
     http_client = mocker.Mock(urllib3.PoolManager(), name="http_client")
     http_client.request.return_value = http_response
@@ -159,18 +158,20 @@ def test_attempt_valid_charge(attempt_charge_event, mocker):
                              fake_uuid, http_client, env)
     expected_headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer MOCK_KEY_123'
+        'Authorization': 'Bearer MOCK_KEY_123'
     }
     expected_body = {
-        "idempotency_key": uuid.uuid1().urn,
-        "source_id": nonce,
+        "idempotency_key": "UUID1234",
+        "source_id": "NONCE9876",
         "amount_money": {
-            "amount": price,
+            "amount": 300,
             "currency": "USD"
         }
     }
     http_client.request.assert_called_with(
-        "POST", "https://connect.squareupsandbox.com/v2/payments", expected_headers, expected_body)
+        "POST", "https://connect.squareupsandbox.com/v2/payments",
+        headers=expected_headers,
+        body=json.dumps(expected_body))
     data = json.loads(ret["body"])
 
     assert 200 == ret["statusCode"]

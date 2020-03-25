@@ -51,7 +51,6 @@ def lambda_handler(event, context,
                 "message": f'Unrecognized path: {path}'
             }),
         }
-    return
 
 
 def handleList(event, context):
@@ -69,13 +68,24 @@ def handleList(event, context):
 
 def handleAttemptCharge(event, context, generate_uuid, http_client, env):
     square_key = env["SQUARE_APP_KEY"]
+    event_body = json.loads(event["body"])
+    post_data = {
+        "idempotency_key": generate_uuid().urn,
+        "source_id": event_body["nonce"],
+        "amount_money": {
+            "amount": 300,
+            "currency": "USD"
+        }
+    }
+    post_body = json.dumps(post_data)
     response = http_client.request(
         "POST",
         "https://connect.squareupsandbox.com/v2/payments",
-        {
+        headers={
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {square_key}'
-        })
+        },
+        body=post_body)
     return {
         "statusCode": 200,
         "body": json.dumps({
