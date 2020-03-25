@@ -112,6 +112,9 @@ def handleAttemptCharge(event, context, generate_uuid, http_client, env):
     return {
         "statusCode": 200,
         "body": json.dumps({
-            "message": "TODO"
+            "message": f"Success!",
+            "penguinId": penguinId,
+            "penguinName": penguin["name"],
+            "chargeAmount": penguin["amount"]
         }),
     }

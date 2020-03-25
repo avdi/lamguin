@@ -207,3 +207,6 @@ def test_attempt_valid_charge_for_a_different_penguin(attempt_charge_event, mock
 
     assert 200 == ret["statusCode"]
     assert "message" in ret["body"]
+    assert data["chargeAmount"] == 500
+    assert data["penguinName"] == "Chinstrap Penguin"
+    assert data["penguinId"] == 2
