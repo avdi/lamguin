@@ -5,6 +5,20 @@ import uuid
 
 # import requests
 
+def list_penguins():
+    return [
+        {'id': 1, 'name': "Emperor Penguin", 'amount': 300,
+         'image_uri': "https://feed-penguins.s3.amazonaws.com/emperor.jpg"},
+        {'id': 2, 'name': "Chinstrap Penguin", 'amount': 500,
+         'image_uri': "https://feed-penguins.s3.amazonaws.com/chinstrap.jpg"},
+        {'id': 3, 'name': "Rockhopper Penguin", 'amount': 700,
+         'image_uri': "https://feed-penguins.s3.amazonaws.com/rockhopper.jpg"}
+    ]
+
+
+def get_penguin_by_id(penguin_id):
+    return next((p for p in list_penguins() if p['id'] == penguin_id), None)
+
 
 def lambda_handler(event, context,
                    generate_uuid=uuid.uuid1,
@@ -69,11 +83,20 @@ def handleList(event, context):
 def handleAttemptCharge(event, context, generate_uuid, http_client, env):
     square_key = env["SQUARE_APP_KEY"]
     event_body = json.loads(event["body"])
+    penguinId = event_body["penguinId"]
+    penguin = get_penguin_by_id(penguinId)
+    if penguin is None:
+        return {
+            "statusCode": 400,
+            "body": json.dumps({
+                "message": f'Invalid penguin ID: {penguinId}'
+            }),
+        }
     post_data = {
         "idempotency_key": generate_uuid().urn,
-        "source_id": event_body["nonce"],
+        "source_id": event_body['nonce'],
         "amount_money": {
-            "amount": 300,
+            "amount": penguin['amount'],
             "currency": "USD"
         }
     }

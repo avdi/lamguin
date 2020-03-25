@@ -175,3 +175,35 @@ def test_attempt_valid_charge(attempt_charge_event, mocker):
 
     assert 200 == ret["statusCode"]
     assert "message" in ret["body"]
+
+
+def test_attempt_valid_charge_for_a_different_penguin(attempt_charge_event, mocker):
+    def fake_uuid(): return SimpleNamespace(urn="UUID1234")
+    http_response = mocker.Mock(urllib3.response.HTTPResponse)
+    http_client = mocker.Mock(urllib3.PoolManager(), name="http_client")
+    http_client.request.return_value = http_response
+    env = {"SQUARE_APP_KEY": "MOCK_KEY_123"}
+    attempt_charge_event["body"] = '{ "nonce": "NONCE9876", "penguinId": 2 }'
+    ret = app.lambda_handler(attempt_charge_event, "",
+                             fake_uuid, http_client, env)
+
+    expected_headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer MOCK_KEY_123'
+    }
+    expected_body = {
+        "idempotency_key": "UUID1234",
+        "source_id": "NONCE9876",
+        "amount_money": {
+            "amount": 500,
+            "currency": "USD"
+        }
+    }
+    http_client.request.assert_called_with(
+        "POST", "https://connect.squareupsandbox.com/v2/payments",
+        headers=expected_headers,
+        body=json.dumps(expected_body))
+    data = json.loads(ret["body"])
+
+    assert 200 == ret["statusCode"]
+    assert "message" in ret["body"]
