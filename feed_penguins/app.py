@@ -76,7 +76,7 @@ def handle_attempt_charge(event, context, generate_uuid, http_client, env):
             'Authorization': f'Bearer {square_key}'
         },
         body=post_body)
-    if response.status in range(200,300):
+    if response.status in range(200, 300):
         return {
             "statusCode": 200,
             "body": json.dumps({

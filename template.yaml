@@ -23,7 +23,7 @@ Resources:
           Properties:
             Path: /hello
             Method: get
-  feedPenguinsFunction:
+  FeedPenguinsFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: feed_penguins/
@@ -51,15 +51,15 @@ Outputs:
   HelloWorldFunction:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
+  HelloWorldFunctionRole:
     Description: "Implicit IAM Role created for Hello World function"
     Value: !GetAtt HelloWorldFunctionRole.Arn
   FeedPenguinsApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+    Description: "API Gateway endpoint URL for Prod stage for Feed Penguins function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/feed_penguins/"
   FeedPenguinsFunction:
-    Description: "Hello World Lambda Function ARN"
+    Description: "Feed Penguins Lambda Function ARN"
     Value: !GetAtt FeedPenguinsFunction.Arn
-  FeedPenguinsFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
+  FeedPenguinsFunctionRole:
+    Description: "Implicit IAM Role created for Feed Penguins function"
     Value: !GetAtt FeedPenguinsFunctionRole.Arn
