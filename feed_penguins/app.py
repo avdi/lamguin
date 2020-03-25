@@ -3,7 +3,6 @@ import urllib3
 import os
 import uuid
 
-# import requests
 
 def list_penguins():
     return [
@@ -24,40 +23,12 @@ def lambda_handler(event, context,
                    generate_uuid=uuid.uuid1,
                    http_client=urllib3.PoolManager(),
                    env=os.environ):
-    """Sample pure Lambda function
-
-    Parameters
-    ----------
-    event: dict, required
-        API Gateway Lambda Proxy Input Format
-
-        Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
-
-    context: object, required
-        Lambda Context runtime methods and attributes
-
-        Context doc: https://docs.aws.amazon.com/lambda/latest/dg/python-context-object.html
-
-    Returns
-    ------
-    API Gateway Lambda Proxy Output Format: dict
-
-        Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-    """
-
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     print(e)
-
-    #     raise e
     path = event['path']
-    httpMethod = event['httpMethod']
+    http_method = event['httpMethod']
     if "/list" == path:
-        return handleList(event, context)
-    elif ("/attempt_charge" == path) and ("POST" == httpMethod):
-        return handleAttemptCharge(event, context, generate_uuid, http_client, env)
+        return handle_list(event, context)
+    elif ("/attempt_charge" == path) and ("POST" == http_method):
+        return handle_attempt_charge(event, context, generate_uuid, http_client, env)
     else:
         return {
             "statusCode": 400,
@@ -67,7 +38,7 @@ def lambda_handler(event, context,
         }
 
 
-def handleList(event, context):
+def handle_list(event, context):
     return {
         "statusCode": 200,
         "body": json.dumps({
@@ -80,16 +51,16 @@ def handleList(event, context):
     }
 
 
-def handleAttemptCharge(event, context, generate_uuid, http_client, env):
+def handle_attempt_charge(event, context, generate_uuid, http_client, env):
     square_key = env["SQUARE_APP_KEY"]
     event_body = json.loads(event["body"])
-    penguinId = event_body["penguinId"]
-    penguin = get_penguin_by_id(penguinId)
+    penguin_id = event_body["penguinId"]
+    penguin = get_penguin_by_id(penguin_id)
     if penguin is None:
         return {
             "statusCode": 400,
             "body": json.dumps({
-                "message": f'Invalid penguin ID: {penguinId}'
+                "message": f'Invalid penguin ID: {penguin_id}'
             }),
         }
     post_data = {
@@ -109,12 +80,22 @@ def handleAttemptCharge(event, context, generate_uuid, http_client, env):
             'Authorization': f'Bearer {square_key}'
         },
         body=post_body)
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": f"Success!",
-            "penguinId": penguinId,
-            "penguinName": penguin["name"],
-            "chargeAmount": penguin["amount"]
-        }),
-    }
+    if response.status in range(200,300):
+        return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "message": f"Success!",
+                "penguinId": penguin_id,
+                "penguinName": penguin["name"],
+                "chargeAmount": penguin["amount"]
+            }),
+        }
+    else:
+        print("*** Square API error: ***")
+        print(response.status)
+        print(response.headers)
+        print(response.data)
+        return {
+            "statusCode": 400,
+            "body": json.dumps({"message": "Square API error"})
+        }

@@ -149,7 +149,7 @@ def test_attempt_valid_charge(attempt_charge_event, mocker):
     """ attempt_charge """
 
     def fake_uuid(): return SimpleNamespace(urn="UUID1234")
-    http_response = mocker.Mock(urllib3.response.HTTPResponse)
+    http_response = SimpleNamespace(status=200, headers={}, data="")
     http_client = mocker.Mock(urllib3.PoolManager(), name="http_client")
     http_client.request.return_value = http_response
     env = {"SQUARE_APP_KEY": "MOCK_KEY_123"}
@@ -179,7 +179,7 @@ def test_attempt_valid_charge(attempt_charge_event, mocker):
 
 def test_attempt_valid_charge_for_a_different_penguin(attempt_charge_event, mocker):
     def fake_uuid(): return SimpleNamespace(urn="UUID1234")
-    http_response = mocker.Mock(urllib3.response.HTTPResponse)
+    http_response = SimpleNamespace(status=200, headers={}, data="")
     http_client = mocker.Mock(urllib3.PoolManager(), name="http_client")
     http_client.request.return_value = http_response
     env = {"SQUARE_APP_KEY": "MOCK_KEY_123"}
@@ -210,3 +210,16 @@ def test_attempt_valid_charge_for_a_different_penguin(attempt_charge_event, mock
     assert data["chargeAmount"] == 500
     assert data["penguinName"] == "Chinstrap Penguin"
     assert data["penguinId"] == 2
+
+
+def test_failed_charge(attempt_charge_event, mocker):
+    def fake_uuid(): return SimpleNamespace(urn="UUID1234")
+    http_response = SimpleNamespace(status=400, headers={}, data="")
+    http_client = mocker.Mock(urllib3.PoolManager(), name="http_client")
+    http_client.request.return_value = http_response
+    env = {"SQUARE_APP_KEY": "MOCK_KEY_123"}
+    ret = app.lambda_handler(attempt_charge_event, "",
+                             fake_uuid, http_client, env)
+    data = json.loads(ret["body"])
+
+    assert 400 == ret["statusCode"]
