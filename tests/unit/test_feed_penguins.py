@@ -148,8 +148,7 @@ def test_attempt_charge_with_get(attempt_charge_event, mocker):
 def test_attempt_valid_charge(attempt_charge_event, mocker):
     """ attempt_charge """
 
-    def fake_uuid():
-        return SimpleNamespace(urn="UUID1234")
+    def fake_uuid(): return SimpleNamespace(urn="UUID1234")
     http_response = mocker.Mock(urllib3.response.HTTPResponse)
     http_client = mocker.Mock(urllib3.PoolManager(), name="http_client")
     http_client.request.return_value = http_response
