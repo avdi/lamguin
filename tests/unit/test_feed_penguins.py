@@ -1,4 +1,6 @@
 import json
+import urllib3
+import uuid
 
 import pytest
 
@@ -147,7 +149,28 @@ def test_attempt_charge_with_get(attempt_charge_event, mocker):
 def test_attempt_valid_charge(attempt_charge_event, mocker):
     """ attempt_charge """
 
-    ret = app.lambda_handler(attempt_charge_event, "")
+    fake_uuid = mocker.Mock(uuid.uuid1())
+    fake_uuid.urn = "UUID1234"
+    http_response = mocker.Mock(urllib3.response.HTTPResponse)
+    http_client = mocker.Mock(urllib3.PoolManager(), name="http_client")
+    http_client.request.return_value = http_response
+    env = {"SQUARE_APP_KEY": "MOCK_KEY_123"}
+    ret = app.lambda_handler(attempt_charge_event, "",
+                             fake_uuid, http_client, env)
+    expected_headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer MOCK_KEY_123'
+    }
+    expected_body = {
+        "idempotency_key": uuid.uuid1().urn,
+        "source_id": nonce,
+        "amount_money": {
+            "amount": price,
+            "currency": "USD"
+        }
+    }
+    http_client.request.assert_called_with(
+        "POST", "https://connect.squareupsandbox.com/v2/payments", expected_headers, expected_body)
     data = json.loads(ret["body"])
 
     assert 200 == ret["statusCode"]

@@ -68,6 +68,14 @@ def handleList(event, context):
 
 
 def handleAttemptCharge(event, context, generate_uuid, http_client, env):
+    square_key = env["SQUARE_APP_KEY"]
+    response = http_client.request(
+        "POST",
+        "https://connect.squareupsandbox.com/v2/payments",
+        {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {square_key}'
+        })
     return {
         "statusCode": 200,
         "body": json.dumps({
