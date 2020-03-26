@@ -6,3 +6,9 @@ aws --region us-east-1 lambda update-function-configuration \
     --function-name lamguin-FeedPenguinsFunction-1A9529C4LZEAZ \
     --environment "Variables={SQUARE_APP_ID=...,SQUARE_APP_KEY=...}"
 ```
+
+## Tailing logs
+
+```shell script
+sam logs --region us-east-1 --stack-name lamguin --name FeedPenguinsFunction -t
+```
